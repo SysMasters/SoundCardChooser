@@ -1,7 +1,5 @@
 package com.rdd.playeruser2;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.Manifest;
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,16 +8,17 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.jakewharton.rxbinding4.view.RxView;
-import com.tbruyelle.rxpermissions3.RxPermissions;
 import com.rdd.player.IErrorListener;
 import com.rdd.player.IJump;
+import com.rdd.player.IPcmDataCallback;
 import com.rdd.player.Player;
 import com.rdd.player.Utils;
+import com.tbruyelle.rxpermissions3.RxPermissions;
 
-import javax.security.auth.login.LoginException;
-
-public class MainActivity extends AppCompatActivity implements IJump, IErrorListener {
+public class MainActivity extends AppCompatActivity implements IJump, IErrorListener, IPcmDataCallback {
 
     private static final String TAG = "MainActivity";
 
@@ -37,6 +36,8 @@ public class MainActivity extends AppCompatActivity implements IJump, IErrorList
                 .rootFilePath("/mnt/sdcard/Documents/")
                 .jumpCallback(this)
                 .errorMsgCallback(this)
+                .pcmDataCallback(this)
+                .play(true)
                 .build();
         mPlayer.prepare();
         Log.e(TAG, "c");
@@ -131,5 +132,10 @@ public class MainActivity extends AppCompatActivity implements IJump, IErrorList
     @Override
     public void onError(String msg) {
         Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onPcmData(byte[] data, int size) {
+//        Log.i(TAG, "onPcmData size:" + size);
     }
 }

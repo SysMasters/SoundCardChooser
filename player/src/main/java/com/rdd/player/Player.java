@@ -6,6 +6,7 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
 import android.widget.Toast;
 
 /**
@@ -23,6 +24,8 @@ public class Player implements IPlayer {
     private AudioTrack audioTrack;//用于java层播放音频数据
     private IJump iJump;//播放完成后的跳转回调
     private IErrorListener iErrorListener;//C层发生错误的错误回调
+    private IPcmDataCallback pcmDataCallback;// pcm数据回调
+    private boolean play;// 是否播放
 
     private String rootFilePath = "";//由客户端传入的文件根路径，用以确定保存文件的路径。  格式：根路径+时间.wav
     private Context context;
@@ -58,24 +61,25 @@ public class Player implements IPlayer {
         //2:只取7202的左声道数据。（只取环境音）
         //8:只取817的左声道数据。（只取听诊音）
         //10:取817的左声道和7202的左声道。（同时取听诊音和环境音）
-        if (cardMode != 2 && cardMode != 8 && cardMode != 10) {
-            Toast.makeText(context, "播放策略设置错误", Toast.LENGTH_SHORT).show();
-            return;
-        }
+//        if (cardMode != 2 && cardMode != 8 && cardMode != 10) {
+//            Toast.makeText(context, "播放策略设置错误", Toast.LENGTH_SHORT).show();
+//            return;
+//        }
 
         //在某些情况下不能播放并提示
         if (getStatus() == STATUS_PLAYING) {
-            Toast.makeText(context, "正在播放", Toast.LENGTH_SHORT).show();
+            iErrorListener.onError("正在播放");
             return;
         }
         if (getStatus() == STATUS_PAUSE) {
-            Toast.makeText(context, "播放暂停中，请使用“继续”功能", Toast.LENGTH_SHORT).show();
+            iErrorListener.onError("播放暂停中，请使用“继续”功能");
             return;
         }
         if (getStatus() == STATUS_UNINIT) {
-            Toast.makeText(context, "播放器未初始化", Toast.LENGTH_SHORT).show();
+            iErrorListener.onError("播放器未初始化");
             return;
         }
+
 
         //设置此次播放录音的保存文件路径并打开文件
         String path = rootFilePath + Utils.getCurrentTime() + ".wav";
@@ -144,12 +148,21 @@ public class Player implements IPlayer {
      * 此操作在子线程中。
      **/
     private void onAudioDataCallback(byte[] data, int size) {
-        if (audioTrack == null) {
-            audioTrack = new AudioTrack(AudioManager.STREAM_VOICE_CALL, 44100, AudioFormat.CHANNEL_OUT_STEREO,
-                    AudioFormat.ENCODING_PCM_16BIT, size, AudioTrack.MODE_STREAM);
+        if (play) {
+            if (audioTrack == null) {
+                audioTrack = new AudioTrack(AudioManager.STREAM_VOICE_CALL, 44100, AudioFormat.CHANNEL_OUT_STEREO,
+                        AudioFormat.ENCODING_PCM_16BIT, size, AudioTrack.MODE_STREAM);
+            }
+            audioTrack.play();
+            audioTrack.write(data, 0, size);
         }
-        audioTrack.play();
-        audioTrack.write(data, 0, size);
+        if (pcmDataCallback != null) {
+            pcmDataCallback.onPcmData(data, size);
+        }
+    }
+
+    public void setOnPcmDataCallback(IPcmDataCallback pcmDataCallback) {
+        this.pcmDataCallback = pcmDataCallback;
     }
 
     /**
@@ -161,7 +174,9 @@ public class Player implements IPlayer {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                iJump.jumpActivity(path);
+                if (iJump != null) {
+                    iJump.jumpActivity(path);
+                }
             }
         });
     }
@@ -272,11 +287,21 @@ public class Player implements IPlayer {
             return Builder.this;
         }
 
+        public Builder play(boolean play) {
+            player.play = play;
+            return Builder.this;
+        }
+
         /**
          * 录音模块报错的消息回调
          **/
         public Builder errorMsgCallback(IErrorListener errorListener) {
             player.iErrorListener = errorListener;
+            return Builder.this;
+        }
+
+        public Builder pcmDataCallback(IPcmDataCallback pcmDataCallback) {
+            player.pcmDataCallback = pcmDataCallback;
             return Builder.this;
         }
 
