@@ -12,7 +12,7 @@ int SoundPlayStrategy7L::playSound() {
     LOGI("播放策略：7202左\n");
     if (!playerPtr->pcm_in_2) {
         //打开声卡
-        playerPtr->pcm_in_2 = pcm_open(2, 0, PCM_IN, &playerPtr->config);
+        playerPtr->pcm_in_2 = pcm_open(3, 0, PCM_IN, &playerPtr->config);
         if (!playerPtr->pcm_in_2 || !pcm_is_ready(playerPtr->pcm_in_2)) {
             LOGE("Unable to open PCM device (%s)\n", pcm_get_error(playerPtr->pcm_in_2));
             if (playerPtr->jniCallbackHelper) {

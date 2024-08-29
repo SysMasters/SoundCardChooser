@@ -53,7 +53,8 @@ public class Player implements IPlayer {
     public void start() {
 
         //确保播放策略已被正确设置
-        int cardMode = Utils.getCustomProperty("voice.mode");
+//        int cardMode = Utils.getCustomProperty("voice.mode");
+        int cardMode = 2;
         //2:只取7202的左声道数据。（只取环境音）
         //8:只取817的左声道数据。（只取听诊音）
         //10:取817的左声道和7202的左声道。（同时取听诊音和环境音）

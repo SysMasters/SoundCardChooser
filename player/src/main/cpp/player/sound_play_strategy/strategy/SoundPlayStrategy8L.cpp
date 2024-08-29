@@ -14,7 +14,7 @@ int SoundPlayStrategy8L::playSound() {
     LOGI("播放策略：817左\n");
     if (!playerPtr->pcm_in) {
         //打开声卡
-        playerPtr->pcm_in = pcm_open(0, 0, PCM_IN, &playerPtr->config);
+        playerPtr->pcm_in = pcm_open(3, 0, PCM_IN, &playerPtr->config);
         if (!playerPtr->pcm_in || !pcm_is_ready(playerPtr->pcm_in)) {
             LOGE("Unable to open PCM device (%s)\n", pcm_get_error(playerPtr->pcm_in));
             if (playerPtr->jniCallbackHelper) {

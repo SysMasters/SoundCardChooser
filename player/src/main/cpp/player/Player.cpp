@@ -31,7 +31,7 @@ Player::Player(JNICallbackHelper *jniCallbackHelper) {
     config.channels = 2;
     config.rate = 44100;
     config.period_size = 16 * (44100 / 1000);   //16ms算一帧，16ms内有多少采样点
-    config.period_count = 4;    //一个周期内采集几帧？
+    config.period_count = 6;    //一个周期内采集几帧？
     config.format = PCM_FORMAT_S16_LE;
     config.start_threshold = 0;
     config.stop_threshold = 0;
@@ -206,7 +206,7 @@ void Player::resouceReset() {
 void Player::setMixArgs() {
     if (!mixer) {
         //打开混音器，这里用来设置声卡的播放通道和录音通道所用的设备
-        mixer = mixer_open(0);
+        mixer = mixer_open(3);
     }
     if (!mixer) {
         LOGE("%s", "Failed to open mixer\n");
